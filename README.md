@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Disaster Relief Resource Allocation
 ### Greedy vs Dynamic Programming — Interactive Visualizer
 
@@ -138,3 +139,7 @@ python -m http.server 8080
 ---
 
 *Built with vanilla JavaScript + Chart.js. No frameworks required.*
+=======
+# disaster-relief-optimizer
+A web-based system that compares Greedy and Dynamic Programming algorithms to optimize disaster relief resource allocation. Includes real-time visualization, hybrid approach, and performance analysis.
+>>>>>>> 45e95b7db515feff4a0916e4df72b1f69cf92e48
