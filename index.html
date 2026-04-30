@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Disaster Relief Resource Allocation — Greedy vs DP</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── HEADER ─── -->
+  <header class="header">
+    <div class="badge">ALGORITHM VISUALIZER v2.0</div>
+    <h1>Disaster Relief <span class="accent">Resource Allocation</span></h1>
+    <p class="subtitle">
+      Compare Greedy vs Dynamic Programming for optimal distribution of limited
+      resources across disaster-affected regions in real time.
+    </p>
+  </header>
+
+  <!-- ─── RESOURCE CONTROLS ─── -->
+  <section class="panel control-panel">
+    <div class="section-title">RESOURCE CONTROLS</div>
+    <div class="controls-grid">
+      <div class="ctrl-group">
+        <label>TOTAL RESOURCES (UNITS)</label>
+        <div class="ctrl-row">
+          <input type="range" id="totalRes" min="10" max="150" value="50" step="5"
+            oninput="document.getElementById('totalResVal').textContent=this.value" />
+          <span class="ctrl-val" id="totalResVal">50</span>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <label>ACTIVE REGIONS</label>
+        <div class="ctrl-row">
+          <input type="range" id="numRegions" min="3" max="12" value="6" step="1"
+            oninput="syncRegionCount(this.value)" />
+          <span class="ctrl-val" id="regCountVal">6</span>
+        </div>
+      </div>
+      <div class="ctrl-group ctrl-btn-group">
+  <button class="run-btn" onclick="runAllocation()">▶ Run Allocation</button>
+  <button class="run-btn" onclick="runHybrid()">⚡ Hybrid</button>
+</div>
+    </div>
+  </section>
+
+  <!-- ─── ADD REGION ─── -->
+  <section class="panel add-region-section">
+    <div class="section-title">ADD CUSTOM REGION</div>
+    <div class="add-grid">
+      <div class="field-group">
+        <label>NAME</label>
+        <input type="text" id="nr-name" placeholder="R-X" />
+      </div>
+      <div class="field-group">
+        <label>URGENCY (1–10)</label>
+        <input type="number" id="nr-urg" min="1" max="10" value="7" />
+      </div>
+      <div class="field-group">
+        <label>POPULATION (K)</label>
+        <input type="number" id="nr-pop" min="1" max="500" value="100" />
+      </div>
+      <div class="field-group">
+        <label>DISTANCE (km)</label>
+        <input type="number" id="nr-dist" min="1" max="500" value="50" />
+      </div>
+      <div class="field-group">
+        <label>RESOURCES NEEDED</label>
+        <input type="number" id="nr-res" min="1" max="100" value="15" />
+      </div>
+      <div class="field-group">
+        <label>&nbsp;</label>
+        <button class="add-btn" onclick="addRegion()">+ Add Region</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── REGIONS TABLE ─── -->
+  <section class="regions-section">
+    <div class="section-title">AFFECTED REGIONS</div>
+    <div class="region-table-wrap">
+      <table id="regTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Region</th>
+            <th>Urgency</th>
+            <th>Population</th>
+            <th>Distance</th>
+            <th>Resources</th>
+            <th>Impact Score</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="regBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── RESULT CARDS ─── -->
+  <div class="results-grid">
+    <div class="result-card greedy">
+      <div class="rc-header">
+        <span class="rc-label">ALGORITHM 01</span>
+        <span class="algo-tag g">GREEDY · O(n log n)</span>
+      </div>
+      <div class="big-impact greedy" id="g-impact">—</div>
+      <div class="rc-sub">Total Impact Score</div>
+      <div class="rc-regions" id="g-regions"></div>
+      <div class="rc-stats">
+        <div class="mini-stat">
+          <div class="mini-stat-label">REGIONS SELECTED</div>
+          <div class="mini-stat-val greedy-color" id="g-count">—</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">RESOURCES USED</div>
+          <div class="mini-stat-val greedy-color" id="g-res">— / —</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card dp">
+      <div class="rc-header">
+        <span class="rc-label">ALGORITHM 02</span>
+        <span class="algo-tag d">DP OPTIMAL · O(nW)</span>
+      </div>
+      <div class="big-impact dp" id="d-impact">—</div>
+      <div class="rc-sub">Total Impact Score</div>
+      <div class="rc-regions" id="d-regions"></div>
+      <div class="rc-stats">
+        <div class="mini-stat">
+          <div class="mini-stat-label">REGIONS SELECTED</div>
+          <div class="mini-stat-val dp-color" id="d-count">—</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">RESOURCES USED</div>
+          <div class="mini-stat-val dp-color" id="d-res">— / —</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── WINNER BANNER ─── -->
+  <div class="winner-banner" id="winnerBanner" style="display:none">
+ </div>
+    <strong id="winnerText"></strong>
+  </div>
+  <!-- WINNER BANNER -->
+<div class="winner-banner" id="winnerBanner" style="display:none">
+  <strong id="winnerText"></strong>
+</div>
+
+<!-- EXPLANATION (OUTSIDE) -->
+<div id="explainBox" style="
+  display:none;
+  margin-top:10px;
+  padding:12px;
+  border-radius:10px;
+  background:#1e293b;
+  color:#facc15;
+  font-size:13px;
+"></div>
+
+<!-- HYBRID BOX -->
+<div id="hybridBox" style="
+  margin-top:12px;
+  padding:14px;
+  border-radius:12px;
+  background:rgba(0,229,160,.08);
+  border:1px solid rgba(0,229,160,.2);
+  color:#00e5a0;
+  font-size:13px;
+"></div>
+
+  <!-- ─── CHARTS ─── -->
+  <section class="panel chart-section">
+    <div class="section-title">PERFORMANCE ANALYSIS</div>
+    <div class="chart-tabs">
+      <button class="tab-btn active" id="tab0" onclick="switchTab(0)">Impact Comparison</button>
+      <button class="tab-btn" id="tab1" onclick="switchTab(1)">Region Impact Scores</button>
+      <button class="tab-btn" id="tab2" onclick="switchTab(2)">Resource Utilization</button>
+    </div>
+    <div class="legend-row" id="chartLegend"></div>
+    <div class="chart-wrap">
+      <canvas id="mainChart" role="img" aria-label="Algorithm performance comparison chart"></canvas>
+    </div>
+  </section>
+
+  <!-- ─── EXECUTION TRACE ─── -->
+  <section class="panel trace-section">
+    <div class="section-title">EXECUTION TRACE</div>
+    <div class="trace-grid">
+      <div>
+        <div class="trace-header greedy-color">GREEDY TRACE</div>
+        <div class="trace-box" id="greedyTrace">Run allocation to see trace...</div>
+      </div>
+      <div>
+        <div class="trace-header dp-color">DP TRACE</div>
+        <div class="trace-box" id="dpTrace">Run allocation to see trace...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── COMPLEXITY ─── -->
+  <div class="complexity-grid">
+    <div class="panel cx-card">
+      <div class="cx-algo">
+        <span class="dot greedy-bg"></span> Greedy Algorithm
+      </div>
+      <div class="cx-row"><span class="cx-key">Strategy</span><span class="cx-val greedy-color">Local Optimization</span></div>
+      <div class="cx-row"><span class="cx-key">Time Complexity</span><span class="cx-val">O(n log n)</span></div>
+      <div class="cx-row"><span class="cx-key">Space Complexity</span><span class="cx-val">O(n)</span></div>
+      <div class="cx-row"><span class="cx-key">Accuracy</span><span class="cx-val warn-color">May be suboptimal</span></div>
+      <div class="cx-row"><span class="cx-key">Best For</span><span class="cx-val">Fast, real-time decisions</span></div>
+    </div>
+    <div class="panel cx-card">
+      <div class="cx-algo">
+        <span class="dot dp-bg"></span> Dynamic Programming
+      </div>
+      <div class="cx-row"><span class="cx-key">Strategy</span><span class="cx-val dp-color">Global Optimization</span></div>
+      <div class="cx-row"><span class="cx-key">Time Complexity</span><span class="cx-val">O(n × W)</span></div>
+      <div class="cx-row"><span class="cx-key">Space Complexity</span><span class="cx-val">O(n × W)</span></div>
+      <div class="cx-row"><span class="cx-key">Accuracy</span><span class="cx-val success-color">Always optimal</span></div>
+      <div class="cx-row"><span class="cx-key">Best For</span><span class="cx-val">Pre-positioning & planning</span></div>
+    </div>
+  </div>
+
+  <!-- ─── INSIGHTS ─── -->
+  <section class="panel insight-box">
+    <div class="insight-title">Key Algorithmic Insights</div>
+    <div class="insight-grid">
+      <div class="insight-item">
+        <strong>Why Greedy Can Fail</strong>
+        Greedy picks the highest impact-ratio item first. It can fill capacity with one large item, missing combinations of smaller items that collectively yield higher total impact.
+      </div>
+      <div class="insight-item">
+        <strong>Why DP Always Wins</strong>
+        The 0/1 Knapsack DP evaluates every possible subset by building a table of optimal solutions for each sub-capacity, guaranteeing the global maximum impact.
+      </div>
+      <div class="insight-item">
+        <strong>Impact Formula</strong>
+        <code>Impact = (Urgency × Population) / Distance</code> — balances crisis severity, scale of affected population, and delivery logistics difficulty.
+      </div>
+      <div class="insight-item">
+        <strong>Real-World Trade-off</strong>
+        Use <em>Greedy</em> when speed is critical (active crisis response). Use <em>DP</em> in planning phases when time permits exhaustive computation.
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    Disaster Relief Resource Allocation · Greedy vs Dynamic Programming · Built with Chart.js
+  </footer>
+
+</div><!-- /app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="js/data.js"></script>
+<script src="js/algorithms.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
